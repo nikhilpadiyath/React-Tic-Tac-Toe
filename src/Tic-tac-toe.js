@@ -11,12 +11,9 @@ function Square({value, onSquareClick}) {
     )
 }
 
-function Board() {
+function Board({xIsNext,squares,onPlay}) {
 
-    const [squares,setSquares] = useState(Array(9).fill(null));
-    const [xIsNext,setXIsNext] = useState(true);
-    
-    function handleClick(i){
+        function handleClick(i){
         if(squares[i] || calculateWinner(squares)){
             return;
         }
@@ -26,8 +23,8 @@ function Board() {
         } else{
             nextSquares[i] = 'O';
         }
-        setSquares(nextSquares);
-        setXIsNext(!xIsNext);
+       
+        onPlay(nextSquares);
     }
 
     const winner = calculateWinner(squares);
@@ -62,8 +59,6 @@ function Board() {
   );
 }
 
-export default Board;
-
 function calculateWinner(squares){
     let lines = [
         [0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]
@@ -76,3 +71,51 @@ function calculateWinner(squares){
         }
         return null;
     }
+
+export default function Game(){
+
+  
+  const [history,setHistory] = useState([Array(9).fill(null)]);
+  const [currentMove,setCurrentMove] = useState(0);
+  const currentSquare = history[currentMove];
+  const xIsNext = currentMove%2 === 0;
+
+  function handlePlay(nextSquares){
+    const nextHistory= [...history.slice(0,currentMove +1), nextSquares]
+    setHistory(nextHistory);
+    setCurrentMove(nextHistory.length-1);
+
+  }
+
+  function jumpTo(nextMove){
+      setCurrentMove(nextMove);
+  }
+
+  const moves = history.map((squares,move) => {
+    let description;
+    if(move > 0)
+    {
+      description= 'Go to move #' + move;
+    } else {
+      description = 'Go to Game Start';
+    }
+
+    return (
+      <li key= {move}>
+        <button onClick= {()=> jumpTo(move)}>{description}</button>
+      </li>
+    );
+  });
+
+
+  return(
+    <div className="game">
+      <div className="game-board">
+        <Board xIsNext= {xIsNext} squares= {currentSquare} onPlay= {handlePlay}/>
+      </div>
+      <div className="game-info">
+        <ol>{moves}</ol>
+      </div>
+    </div>
+  )
+}
